@@ -1,0 +1,12 @@
+class Listener(models.Model):
+    software_name = models.CharField(max_length=255)
+    software_version = models.CharField(max_length=50)
+    uploader_callsign = models.CharField(max_length=50)
+    uploader_position = models.JSONField(blank=True, null=True)
+    uploader_radio = models.CharField(max_length=255, blank=True, null=True)
+    uploader_antenna = models.CharField(max_length=255, blank=True, null=True)
+    uploader_contact_email = models.EmailField(blank=True, null=True)
+    mobile = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.uploader_callsign
