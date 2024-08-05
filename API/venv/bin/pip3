@@ -1,4 +1,4 @@
-#!/home/matija/Work/Diplomski_rad/API/venv/bin/python3.10
+#!/home/matija/Work/Diplomski/API/venv/bin/python3.10
 # -*- coding: utf-8 -*-
 import re
 import sys
