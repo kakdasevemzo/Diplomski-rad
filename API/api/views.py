@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import BlogPost
 from .serializers import BlogPostSerializer, TelemetrySerializer
+from .models import Telemetry
 
 class BlogPostListCreate(generics.ListCreateAPIView):
     queryset = BlogPost.objects.all()
@@ -12,7 +13,12 @@ class BlogPostListCreate(generics.ListCreateAPIView):
 
 @api_view(['PUT'])
 def upload_telemetry(request):
-    if request.method == 'PUT':
+    if request.method == 'GET':
+        telemetry_records = Telemetry.objects.all()
+        serializer = TelemetrySerializer(telemetry_records, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
         serializer = TelemetrySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
