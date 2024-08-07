@@ -11,7 +11,7 @@ class BlogPostListCreate(generics.ListCreateAPIView):
     serializer_class = BlogPostSerializer
 
 
-@api_view(['PUT'])
+@api_view(['GET', 'PUT'])
 def upload_telemetry(request):
     if request.method == 'GET':
         telemetry_records = Telemetry.objects.all()
