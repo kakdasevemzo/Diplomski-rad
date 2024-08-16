@@ -1,16 +1,6 @@
 from django.db import models
-
-# Create your models here.
-class BlogPost(models.Model):
-    title = models.CharField(max_length=100)
-    content = models.TextField()
-    published = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self) -> str:
-        return self.title
     
 class Telemetry(models.Model):
-    dev = models.CharField(max_length=100)
     software_name = models.CharField(max_length=100)
     software_version = models.CharField(max_length=100)
     uploader_callsign = models.CharField(max_length=100)
@@ -38,3 +28,6 @@ class Telemetry(models.Model):
     rssi = models.FloatField()
     uploader_position = models.JSONField()
     uploader_antenna = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.serial
