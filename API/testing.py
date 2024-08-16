@@ -1,49 +1,45 @@
-import paho.mqtt.client as mqtt
-import random
 
-# Configuration
-BROKER = "ws-reader.v2.sondehub.org"
-PORT = 80
-CLIENT_ID = "SondeHub-Tracker-" + str(int(random.random() * 10000000000))
-TOPIC_PREFIX = "sondes-new/#"  # Default topic to subscribe to
+import requests
+ 
+# Making a PUT request
+r = requests.put('https://sondehubapi-eceb35da85f7.herokuapp.com/api/sondes/telemetry/', data ={
+    "software_name": "radiosonde_auto_rx",
+    "software_version": "1.7.4",
+    "uploader_callsign": "W5TUX",
+    "time_received": "2024-08-16T11:18:23.237884Z",
+    "manufacturer": "Vaisala",
+    "type": "RS41",
+    "serial": "W0434915",
+    "frame": 2635,
+    "datetime": "2024-08-16T11:17:50.468Z",
+    "lat": 32.83891,
+    "lon": -97.30071,
+    "alt": 4002.28432,
+    "subtype": "RS41-SG",
+    "frequency": 404.801,
+    "temp": 6.7,
+    "humidity": 45.1,
+    "vel_h": 6.15371,
+    "vel_v": 10.56623,
+    "pressure": 0,
+    "heading": 193.09061,
+    "batt": 3.0,
+    "sats": 11,
+    "xdata": "string",
+    "snr": 8.1,
+    "rssi": 0,
+    "uploader_position": [
+      0,
+      0,
+      200
+    ],
+    "uploader_antenna": "1/4 Monopole in attic"
+  })
+ 
+# check status code for response received
+# success code - 200
+print(r)
+# print content of request
+print(r.content)
 
-# Callback when the client connects to the broker
-def on_connect(client, userdata, flags, rc):
-    print(f"Connected with result code {rc}")
-    client.subscribe(TOPIC_PREFIX)
-    print(f"Subscribed to {TOPIC_PREFIX}")
 
-# Callback when a message is received from the broker
-def on_message(client, userdata, message):
-    print(f"Received message '{message.payload.decode()}' on topic '{message.topic}'")
-
-# Callback when the connection to the broker is lost
-def on_disconnect(client, userdata, rc,A,B):
-    if rc != 0:
-        print(f"Unexpected disconnection. Code: {rc}")
-    else:
-        print("Disconnected successfully")
-
-# Create a new MQTT client instance
-client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, CLIENT_ID)
-client.ws_set_options(path="/")
-# Optionally set WebSocket options if required by the broker
-# client.ws_set_options(path="/", headers={})  # Adjust path and headers if needed
-
-# Assign callbacks
-client.on_connect = on_connect
-client.on_message = on_message
-client.on_disconnect = on_disconnect
-
-# Connect to the MQTT broker
-try:
-    client.connect(BROKER, PORT, 60)
-    client.loop_start()
-
-    while True:
-        pass  # Keep the script running
-
-except KeyboardInterrupt:
-    print("Disconnecting...")
-    client.loop_stop()
-    client.disconnect()

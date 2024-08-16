@@ -63,24 +63,18 @@ def upload_telemetry(request):
         return Response(telemetry_dict, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
-        # Access headers
-        print(f'Request method PUT: {request}')
-        print(f'Request method PUT data: {request.data}')
-        date_header = request.headers.get('Date')
-        user_agent = request.headers.get('User-Agent')
-        print(f"date_header: {date_header}, user_agent: {user_agent}")
-        # Parse the date header if needed
-        # if date_header:
-        #     try:
-        #         date_parsed = parse_datetime(date_header)
-        #         if date_parsed is None:
-        #             date_parsed = datetime.strptime(date_header, '%a, %d %b %Y %H:%M:%S %Z')
-        #     except ValueError:
-        #         return Response({'error': 'Invalid date format'}, status=status.HTTP_400_BAD_REQUEST)
+        # Ensure the request data is a list
+        if not isinstance(request.data, list):
+            return Response({'error': 'Expected a list of telemetry objects'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Proceed with the standard serialization and saving process
-        serializer = TelemetrySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Process each telemetry object in the list
+        response_data = []
+        for telemetry_data in request.data:
+            serializer = TelemetrySerializer(data=telemetry_data)
+            if serializer.is_valid():
+                serializer.save()
+                response_data.append(serializer.data)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(response_data, status=status.HTTP_200_OK)
