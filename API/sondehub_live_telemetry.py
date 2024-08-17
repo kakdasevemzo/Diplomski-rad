@@ -40,6 +40,7 @@ def on_message(message):
         "uploader_position": list(map(float, message.get("uploader_position", "0,0").split(','))),
         "uploader_antenna": message.get("uploader_antenna", "")
     }
+
     with buffer_lock:
         message_buffer.append(transformed_data)
 
@@ -56,6 +57,7 @@ def send_batch():
                         packets_sent += len(batch)  # Update packet count
                     print(f"Sent {len(batch)} packets. Total packets sent: {packets_sent}")
                     print(r.status_code, r.reason)
+                    print(r.text)
                 except requests.RequestException as e:
                     print(f"Request failed: {e}")
         time.sleep(10)  # Adjust the interval as needed
@@ -74,7 +76,7 @@ if __name__ == "__main__":
         print(f'Streaming data for sonde: {sonde}')
     else:
         print(f'Streaming all data for all sondes!')
-    test = sondehub.Stream(on_message=on_message, sondes=sonde if sonde else ["#"])
+    test = sondehub.Stream(on_message=on_message, sondes=[sonde] if sonde else ["#"])
 
     while True:
         time.sleep(1)  # Replace with your main loop logic
