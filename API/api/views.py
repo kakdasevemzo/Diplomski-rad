@@ -6,6 +6,7 @@ from .serializers import TelemetrySerializer
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from .models import Telemetry
+
 from datetime import timedelta
 
 
@@ -116,9 +117,10 @@ def upload_telemetry(request):
         for telemetry_data in request.data:
             serializer = TelemetrySerializer(data=telemetry_data)
             if serializer.is_valid():
-                telemetry_object = serializer.save(commit=False)  # Do not commit to DB yet
+                validated_data = serializer.validated_data
+                telemetry_object = Telemetry(**validated_data)  # Create the model instance
                 telemetry_objects.append(telemetry_object)
-                response_data.append(serializer.data)
+                response_data.append(validated_data)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
