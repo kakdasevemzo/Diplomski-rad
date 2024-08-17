@@ -13,7 +13,7 @@ from datetime import timedelta
 # MQTT broker details
 BROKER = 'broker.emqx.io'
 PORT = 8083  # Use 8083 for WebSocket if needed
-
+client = mqtt.Client(reconnect_on_failure=True, transport="websockets")
 # MQTT Callbacks
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -27,10 +27,7 @@ def on_publish(client, userdata, mid):
 def on_disconnect(client, userdata, rc):
     print("Disconnected from MQTT Broker")
 
-# Function to publish MQTT messages
-def publish_mqtt_message(topic, message):
-    client = mqtt.Client()
-    
+def initialize_mqtt_client():
     # Assigning callbacks
     client.on_connect = on_connect
     client.on_publish = on_publish
@@ -42,13 +39,17 @@ def publish_mqtt_message(topic, message):
     # Start the network loop
     client.loop_start()
 
-    # Publish the message
+def publish_mqtt_message(topic, message):
+    # Publish the message asynchronously
     result = client.publish(topic, message)
-    
-    # Wait for the publish to complete
-    result.wait_for_publish()
+    # Optionally, handle publish results or errors here
+    if result.rc != mqtt.MQTT_ERR_SUCCESS:
+        print(f"Failed to publish message to topic {topic}")
 
-    # Stop the loop and disconnect
+# Initialize MQTT client once when the application starts
+initialize_mqtt_client()
+
+def shutdown_mqtt_client():
     client.loop_stop()
     client.disconnect()
 
@@ -136,5 +137,5 @@ def upload_telemetry(request):
             # async_publish_mqtt_message.delay(topic, message)
             # For now, we'll just call it synchronously for simplicity
             publish_mqtt_message(topic, message)
-        
+        shutdown_mqtt_client()
         return Response(response_data, status=status.HTTP_200_OK)
