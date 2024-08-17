@@ -46,9 +46,6 @@ def publish_mqtt_message(topic, message):
     if result.rc != mqtt.MQTT_ERR_SUCCESS:
         print(f"Failed to publish message to topic {topic}")
 
-# Initialize MQTT client once when the application starts
-initialize_mqtt_client()
-
 def shutdown_mqtt_client():
     client.loop_stop()
     client.disconnect()
@@ -108,10 +105,11 @@ def upload_telemetry(request):
         return Response(telemetry_dict, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
+        
         # Ensure the request data is a list
         if not isinstance(request.data, list):
             return Response({'error': 'Expected a list of telemetry objects'}, status=status.HTTP_400_BAD_REQUEST)
-        
+        initialize_mqtt_client()
         # Process each telemetry object in the list
         response_data = []
         telemetry_objects = []
