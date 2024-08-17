@@ -117,8 +117,8 @@ def upload_telemetry(request):
             if serializer.is_valid():
                 serializer.save()
                 response_data.append(serializer.data)
-                topic = f"telemetry/{telemetry.get('serial')}"
-                message = f"Telemetry data received: {telemetry}"
+                topic = f"telemetry/{telemetry_data.get('serial')}"
+                message = f"Telemetry data received: {telemetry_data}"
                 publish_mqtt_message(topic, message)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

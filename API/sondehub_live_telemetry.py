@@ -1,8 +1,9 @@
 import sondehub
 import sys
+import requests
 
 def on_message(message):
-
+    print(f'Message arrived: {message}')
     transformed_data = {
         "software_name": message.get("software_name", ""),
         "software_version": message.get("software_version", ""),
@@ -32,10 +33,11 @@ def on_message(message):
         "uploader_position": list(map(float, message.get("uploader_position", "0,0").split(','))),
         "uploader_antenna": message.get("uploader_antenna", "")
     }
-    transformed_data["uploader_position"].append(message.get("uploader_alt", 0))
-    print(transformed_data)
-    # Return the transformed data inside a list
-    return [transformed_data]
+    transformed_data["uploader_position"].append(message.get("uploader_alt", 0.0))
+    r = requests.put(url='https://sondehubapi-eceb35da85f7.herokuapp.com/api/sondes/telemetry/', json=[transformed_data])
+    print(r.status_code)
+    print(r.reason)
+    return
 
 if __name__ == "__main__":
     sonde = None
@@ -45,7 +47,8 @@ if __name__ == "__main__":
 
     if sonde:
         print(f'Streaming data for sonde: {sonde}')
-    print(f'Streaming all data for all sondes!')
+    else:
+        print(f'Streaming all data for all sondes!')
     test = sondehub.Stream(on_message=on_message, sondes=sonde if sonde else ["#"])
 
     while 1:
