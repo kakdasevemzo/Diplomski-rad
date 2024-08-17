@@ -112,15 +112,27 @@ def upload_telemetry(request):
         
         # Process each telemetry object in the list
         response_data = []
+        telemetry_objects = []
         for telemetry_data in request.data:
             serializer = TelemetrySerializer(data=telemetry_data)
             if serializer.is_valid():
-                serializer.save()
+                telemetry_object = serializer.save(commit=False)  # Do not commit to DB yet
+                telemetry_objects.append(telemetry_object)
                 response_data.append(serializer.data)
-                topic = f"telemetry/{telemetry_data.get('serial')}"
-                message = f"Telemetry data received: {telemetry_data}"
-                publish_mqtt_message(topic, message)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Bulk create objects in the database
+        if telemetry_objects:
+            Telemetry.objects.bulk_create(telemetry_objects)
 
+        # Publish MQTT messages asynchronously
+        for telemetry_data in response_data:
+            topic = f"telemetry/{telemetry_data.get('serial')}"
+            message = f"Telemetry data received: {telemetry_data}"
+            # Use an asynchronous task queue like Celery for publishing messages
+            # async_publish_mqtt_message.delay(topic, message)
+            # For now, we'll just call it synchronously for simplicity
+            publish_mqtt_message(topic, message)
+        
         return Response(response_data, status=status.HTTP_200_OK)

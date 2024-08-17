@@ -1,9 +1,16 @@
+import threading
+import time
+import requests
 import sondehub
 import sys
-import requests
+# A buffer to hold messages
+message_buffer = []
+packets_sent = 0
+counter_lock = threading.Lock()
+buffer_lock = threading.Lock()
 
 def on_message(message):
-    print(f'Message arrived: {message}')
+    global message_buffer
     transformed_data = {
         "software_name": message.get("software_name", ""),
         "software_version": message.get("software_version", ""),
@@ -33,13 +40,31 @@ def on_message(message):
         "uploader_position": list(map(float, message.get("uploader_position", "0,0").split(','))),
         "uploader_antenna": message.get("uploader_antenna", "")
     }
-    transformed_data["uploader_position"].append(message.get("uploader_alt", 0.0))
-    r = requests.put(url='https://sondehubapi-eceb35da85f7.herokuapp.com/api/sondes/telemetry/', json=[transformed_data])
-    print(r.status_code)
-    print(r.reason)
-    return
+    with buffer_lock:
+        message_buffer.append(transformed_data)
+
+def send_batch():
+    global message_buffer, packets_sent
+    while True:
+        with buffer_lock:
+            if message_buffer:
+                batch = message_buffer.copy()
+                message_buffer = []
+                try:
+                    r = requests.put(url='https://sondehubapi-eceb35da85f7.herokuapp.com/api/sondes/telemetry/', json=batch)
+                    with counter_lock:
+                        packets_sent += len(batch)  # Update packet count
+                    print(f"Sent {len(batch)} packets. Total packets sent: {packets_sent}")
+                    print(r.status_code, r.reason)
+                except requests.RequestException as e:
+                    print(f"Request failed: {e}")
+        time.sleep(10)  # Adjust the interval as needed
 
 if __name__ == "__main__":
+    # Start the batch sending thread
+    threading.Thread(target=send_batch, daemon=True).start()
+
+    # Initialize streaming
     sonde = None
     if len(sys.argv) > 1:
         sonde = sys.argv[1]
@@ -51,5 +76,6 @@ if __name__ == "__main__":
         print(f'Streaming all data for all sondes!')
     test = sondehub.Stream(on_message=on_message, sondes=sonde if sonde else ["#"])
 
-    while 1:
-        pass
+    while True:
+        time.sleep(1)  # Replace with your main loop logic
+
