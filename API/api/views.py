@@ -1,4 +1,5 @@
 from rest_framework import status
+import paho.mqtt.client as mqtt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import TelemetrySerializer
@@ -7,6 +8,48 @@ from django.utils.timezone import now
 from .models import Telemetry
 from datetime import timedelta
 
+
+# MQTT broker details
+BROKER = 'broker.emqx.io'
+PORT = 8083  # Use 8083 for WebSocket if needed
+
+# MQTT Callbacks
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT Broker!")
+    else:
+        print(f"Failed to connect, return code {rc}")
+
+def on_publish(client, userdata, mid):
+    print(f"Message published with id: {mid}")
+
+def on_disconnect(client, userdata, rc):
+    print("Disconnected from MQTT Broker")
+
+# Function to publish MQTT messages
+def publish_mqtt_message(topic, message):
+    client = mqtt.Client()
+    
+    # Assigning callbacks
+    client.on_connect = on_connect
+    client.on_publish = on_publish
+    client.on_disconnect = on_disconnect
+    
+    # Connect to the broker
+    client.connect(BROKER, PORT, 60)
+    
+    # Start the network loop
+    client.loop_start()
+
+    # Publish the message
+    result = client.publish(topic, message)
+    
+    # Wait for the publish to complete
+    result.wait_for_publish()
+
+    # Stop the loop and disconnect
+    client.loop_stop()
+    client.disconnect()
 
 @api_view(['GET', 'PUT'])
 def upload_telemetry(request):
@@ -74,6 +117,9 @@ def upload_telemetry(request):
             if serializer.is_valid():
                 serializer.save()
                 response_data.append(serializer.data)
+                topic = f"telemetry/{telemetry.get('serial')}"
+                message = f"Telemetry data received: {telemetry}"
+                publish_mqtt_message(topic, message)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
