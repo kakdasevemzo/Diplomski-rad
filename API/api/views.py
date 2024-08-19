@@ -56,7 +56,8 @@ def parse_date_header(date_str):
 
         # Parse the HTTP-date string to a datetime object
         datetime_obj = datetime.strptime(date_str, format_string)
-        return datetime_obj
+        client_time = datetime_obj.replace(tzinfo=timezone.utc)
+        return client_time
     except (ValueError, TypeError):
         return None
 
