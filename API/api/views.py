@@ -7,7 +7,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from .models import Telemetry
 
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 
 
 # MQTT broker details
@@ -50,13 +50,19 @@ def shutdown_mqtt_client():
     client.loop_stop()
     client.disconnect()
 
+def parse_date_header(date_str):
+    try:
+        return parse_datetime(date_str)
+    except (ValueError, TypeError):
+        return None
+
 @api_view(['GET', 'PUT'])
 def upload_telemetry(request):
     if request.method == 'GET':
         # Get query parameters
         duration = request.query_params.get('duration', '0')
-        serial = request.query_params.get('serial')
-        datetime_str = request.query_params.get('datetime', now().isoformat())
+        serial = request.query_params.get('serial', None)
+        datetime_str = request.query_params.get('datetime', None)
         
         try:
             end_time = parse_datetime(datetime_str)
@@ -109,6 +115,18 @@ def upload_telemetry(request):
         # Ensure the request data is a list
         if not isinstance(request.data, list):
             return Response({'error': 'Expected a list of telemetry objects'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        client_time_str = request.headers.get('Date')
+        client_time = parse_date_header(client_time_str)
+        
+        if not client_time:
+            return Response({'error': 'Invalid Date header'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the current server time in UTC
+        server_time = datetime.now(timezone.utc)
+        
+        # Calculate the time offset (difference in seconds)
+        time_offset = (server_time - client_time).total_seconds()
         initialize_mqtt_client()
         # Process each telemetry object in the list
         response_data = []
@@ -130,7 +148,7 @@ def upload_telemetry(request):
         # Publish MQTT messages asynchronously
         for telemetry_data in response_data:
             topic = f"telemetry/{telemetry_data.get('serial')}"
-            message = f"Telemetry data received: {telemetry_data}"
+            message = f"{telemetry_data}"
             # Use an asynchronous task queue like Celery for publishing messages
             # async_publish_mqtt_message.delay(topic, message)
             # For now, we'll just call it synchronously for simplicity

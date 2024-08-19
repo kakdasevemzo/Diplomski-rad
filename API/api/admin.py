@@ -3,4 +3,13 @@ from django.contrib import admin
 # Register your models here.
 from .models import Telemetry
 
-admin.site.register(Telemetry)
+class TelemetryAdmin(admin.ModelAdmin):
+    list_filter = [
+         "datetime",
+         "frame"
+    ]
+    search_fields = (
+        "serial",
+    )
+
+admin.site.register(Telemetry, TelemetryAdmin)

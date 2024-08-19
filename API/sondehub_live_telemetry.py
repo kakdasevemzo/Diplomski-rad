@@ -60,7 +60,7 @@ def send_batch():
                     print(r.text)
                 except requests.RequestException as e:
                     print(f"Request failed: {e}")
-        time.sleep(10)  # Adjust the interval as needed
+        time.sleep(3)  # Adjust the interval as needed
 
 if __name__ == "__main__":
     # Start the batch sending thread
