@@ -52,7 +52,11 @@ def shutdown_mqtt_client():
 
 def parse_date_header(date_str):
     try:
-        return parse_datetime(date_str)
+        format_string = "%a, %d %b %Y %H:%M:%S %Z"
+
+        # Parse the HTTP-date string to a datetime object
+        datetime_obj = datetime.strptime(date_str, format_string)
+        return datetime_obj
     except (ValueError, TypeError):
         return None
 

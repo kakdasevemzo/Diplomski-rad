@@ -1,7 +1,9 @@
 import threading
 import time
 import requests
+from datetime import datetime
 import sondehub
+from email.utils import format_datetime
 import sys
 # A buffer to hold messages
 message_buffer = []
@@ -51,16 +53,29 @@ def send_batch():
             if message_buffer:
                 batch = message_buffer.copy()
                 message_buffer = []
-                try:
-                    r = requests.put(url='https://sondehubapi-eceb35da85f7.herokuapp.com/api/sondes/telemetry/', json=batch)
-                    with counter_lock:
-                        packets_sent += len(batch)  # Update packet count
-                    print(f"Sent {len(batch)} packets. Total packets sent: {packets_sent}")
-                    print(r.status_code, r.reason)
-                    print(r.text)
-                except requests.RequestException as e:
-                    print(f"Request failed: {e}")
-        time.sleep(3)  # Adjust the interval as needed
+
+                last_message_time_received = batch[-1].get("time_received")
+                
+                if last_message_time_received:
+                    # Convert time_received to a datetime object
+                    last_message_datetime = datetime.strptime(last_message_time_received, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    
+                    # Format the datetime as per RFC 7231 format
+                    date_header_value = last_message_datetime.strftime(f"%a, %d %b %Y %H:%M:%S GMT")
+                    print(date_header_value)
+                    headers = {
+                        'Date': date_header_value
+                    }
+                    try:
+                        r = requests.put(url='https://sondehubapi-eceb35da85f7.herokuapp.com/api/sondes/telemetry/', json=batch, headers=headers)
+                        with counter_lock:
+                            packets_sent += len(batch)  # Update packet count
+                        print(f"Sent {len(batch)} packets. Total packets sent: {packets_sent}")
+                        print(r.status_code, r.reason)
+                        print(r.text)
+                    except requests.RequestException as e:
+                        print(f"Request failed: {e}")
+        time.sleep(1)  # Adjust the interval as needed
 
 if __name__ == "__main__":
     # Start the batch sending thread
