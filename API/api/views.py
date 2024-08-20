@@ -82,7 +82,14 @@ def upload_telemetry(request):
                 return JsonResponse({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
             
             # Fetch the telemetry data for the given serial and datetime
-            telemetry_data = Telemetry.objects.filter(serial=serial, datetime=datetime_obj)
+
+            datetime_base = datetime_obj.replace(microsecond=0)
+
+            # Create the range for the datetime
+            start_datetime = datetime_base
+            end_datetime = datetime_base + timedelta(seconds=1) - timedelta(microseconds=1)
+            
+            telemetry_data = Telemetry.objects.filter(serial=serial, datetime__range=(start_datetime, end_datetime))
 
             uploaders = []
 
@@ -99,7 +106,7 @@ def upload_telemetry(request):
                 if telemetry.snr:
                     uploader_info["snr"] = telemetry.snr
 
-                if telemetry.snr:
+                if telemetry.rssi:
                     uploader_info["rssi"] = telemetry.rssi
                 
                 # Only add the dictionary to the list if it has at least one key-value pair
