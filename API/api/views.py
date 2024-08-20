@@ -106,6 +106,8 @@ def upload_telemetry(request):
             if telemetry_data.exists():
                 first_entry = telemetry_data.first()
                 uploader_position = str(first_entry.uploader_position[0]) + ',' + str(first_entry.uploader_position[1])
+                position = str(first_entry.lat) + ',' + str(first_entry.lon)
+                uploader_altitude = str(first_entry.uploader_position[2])
                 # Construct the response dictionary
                 response = {
                     serial: {
@@ -133,18 +135,24 @@ def upload_telemetry(request):
                             "sats": first_entry.sats,
                             "batt": first_entry.batt,
                             "frequency": first_entry.frequency,
+                            "burst_timer": first_entry.burst_timer,
                             "snr": first_entry.snr,
+                            "tx_frequency": first_entry.tx_frequency,
+                            "user-agent" : first_entry.user_agent,
+                            "position": position,
+                            "uploader_altitude": uploader_altitude,
                             "uploaders": uploaders  # Include the uploaders list here
                         }
                     }
                 }
 
                 # Print or return the constructed response
-                print(response)
+                return Response(response, status=status.HTTP_200_OK)
             else:
                 response = {
                     "error": "No telemetry data found for the specified serial and datetime."
                 }
+                return Response(response, status=status.HTTP_204_NO_CONTENT)
         duration_mapping = {
             '0s': timedelta(seconds=0),
             '15s': timedelta(seconds=15),
