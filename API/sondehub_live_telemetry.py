@@ -13,6 +13,7 @@ buffer_lock = threading.Lock()
 
 def on_message(message):
     global message_buffer
+
     transformed_data = {
         "software_name": message.get("software_name", ""),
         "software_version": message.get("software_version", ""),
@@ -39,7 +40,7 @@ def on_message(message):
         "xdata": message.get("xdata", "string"),  # Assuming 'xdata' is not present in input
         "snr": message.get("snr", 0.0),
         "rssi": message.get("rssi", 0.0),
-        "uploader_position": list(map(float, message.get("uploader_position", "0,0").split(','))),
+        "uploader_position": list(map(float, message.get("uploader_position", "0,0").split(',')), float(message.get("uploader_alt", "0"))),
         "uploader_antenna": message.get("uploader_antenna", ""),
         "burst_timer" : message.get("burst_timer", 65535),
         "tx_frequency" : message.get("tx_frequency", None),
@@ -47,6 +48,7 @@ def on_message(message):
     }
 
     with buffer_lock:
+        print(message)
         message_buffer.append(transformed_data)
 
 def send_batch():
