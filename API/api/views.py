@@ -206,8 +206,7 @@ def upload_telemetry(request):
         telemetry_objects = []
         for telemetry_data in request.data:
             telemetry_data['user-agent'] = user_agent
-            print(telemetry_data)
-            serializer = TelemetrySerializer(data=telemetry_data['user-agent'])
+            serializer = TelemetrySerializer(data=telemetry_data)
             if serializer.is_valid():
                 validated_data = serializer.validated_data
                 telemetry_object = Telemetry(**validated_data)  # Create the model instance
