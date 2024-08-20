@@ -47,7 +47,6 @@ def on_message(message):
     }
 
     with buffer_lock:
-        print(transformed_data)
         message_buffer.append(transformed_data)
 
 def send_batch():
@@ -76,6 +75,7 @@ def send_batch():
                             packets_sent += len(batch)  # Update packet count
                         print(f"Sent {len(batch)} packets. Total packets sent: {packets_sent}")
                         print(r.status_code, r.reason)
+                        print(r.text)
                     except requests.RequestException as e:
                         print(f"Request failed: {e}")
         time.sleep(1)  # Adjust the interval as needed
