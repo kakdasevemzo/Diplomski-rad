@@ -98,6 +98,9 @@ def upload_telemetry(request):
                 
                 if telemetry.snr:
                     uploader_info["snr"] = telemetry.snr
+
+                if telemetry.snr:
+                    uploader_info["rssi"] = telemetry.rssi
                 
                 # Only add the dictionary to the list if it has at least one key-value pair
                 if uploader_info:
