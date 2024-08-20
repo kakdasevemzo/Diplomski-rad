@@ -4,8 +4,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import TelemetrySerializer
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import now
 from .models import Telemetry
+from django.http import JsonResponse
 
 from datetime import timedelta, datetime, timezone
 
@@ -65,19 +65,88 @@ def parse_date_header(date_str):
 def upload_telemetry(request):
     if request.method == 'GET':
         # Get query parameters
-        duration = request.query_params.get('duration', '0')
+        duration = request.query_params.get('duration', None)
         serial = request.query_params.get('serial', None)
         datetime_str = request.query_params.get('datetime', None)
-        
-        try:
-            end_time = parse_datetime(datetime_str)
-            if end_time is None:
-                return Response({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError:
-            return Response({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Calculate start time based on duration
+        server_time = datetime.now(timezone.utc)
+        if duration == '0' or duration is None:
+            if not serial or not datetime_str:
+                return JsonResponse({'error': 'Both serial and datetime parameters are required when duration is 0 or None'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                # Parse the datetime string
+                datetime_obj = parse_datetime(datetime_str)
+                if datetime_obj is None:
+                    raise ValueError("Invalid datetime format")
+            except ValueError:
+                return JsonResponse({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Fetch the telemetry data for the given serial and datetime
+            telemetry_data = Telemetry.objects.filter(serial=serial, datetime=datetime_obj)
+
+            uploaders = []
+
+            for telemetry in telemetry_data:
+                uploader_info = {}
+                
+                # Extract uploader_callsign, frequency, and snr if they exist
+                if telemetry.uploader_callsign:
+                    uploader_info["uploader_callsign"] = telemetry.uploader_callsign
+                
+                if telemetry.frequency:
+                    uploader_info["frequency"] = telemetry.frequency
+                
+                if telemetry.snr:
+                    uploader_info["snr"] = telemetry.snr
+                
+                # Only add the dictionary to the list if it has at least one key-value pair
+                if uploader_info:
+                    uploaders.append(uploader_info)
+
+            if telemetry_data.exists():
+                first_entry = telemetry_data.first()
+                uploader_position = str(first_entry.uploader_position[0]) + ',' + str(first_entry.uploader_position[1])
+                # Construct the response dictionary
+                response = {
+                    serial: {
+                        datetime_str: {
+                            "software_name": first_entry.software_name,
+                            "software_version": first_entry.software_version,
+                            "uploader_callsign": first_entry.uploader_callsign,
+                            "uploader_position": uploader_position,
+                            "uploader_antenna": first_entry.uploader_antenna,
+                            "time_received": first_entry.time_received.isoformat(),
+                            "datetime": first_entry.datetime.isoformat(),
+                            "manufacturer": first_entry.manufacturer,
+                            "type": first_entry.type,
+                            "serial": first_entry.serial,
+                            "subtype": first_entry.subtype,
+                            "frame": first_entry.frame,
+                            "lat": first_entry.lat,
+                            "lon": first_entry.lon,
+                            "alt": first_entry.alt,
+                            "temp": first_entry.temp,
+                            "humidity": first_entry.humidity,
+                            "vel_v": first_entry.vel_v,
+                            "vel_h": first_entry.vel_h,
+                            "heading": first_entry.heading,
+                            "sats": first_entry.sats,
+                            "batt": first_entry.batt,
+                            "frequency": first_entry.frequency,
+                            "snr": first_entry.snr,
+                            "uploaders": uploaders  # Include the uploaders list here
+                        }
+                    }
+                }
+
+                # Print or return the constructed response
+                print(response)
+            else:
+                response = {
+                    "error": "No telemetry data found for the specified serial and datetime."
+                }
         duration_mapping = {
+            '0s': timedelta(seconds=0),
             '15s': timedelta(seconds=15),
             '1m': timedelta(minutes=1),
             '30m': timedelta(minutes=30),
@@ -88,9 +157,7 @@ def upload_telemetry(request):
             '3d': timedelta(days=3),
         }
         if duration in duration_mapping:
-            start_time = end_time - duration_mapping[duration]
-        else:
-            start_time = None
+            start_time = server_time - duration_mapping[duration]
 
         # Filter telemetry data
         if serial:
@@ -122,6 +189,7 @@ def upload_telemetry(request):
             return Response({'error': 'Expected a list of telemetry objects'}, status=status.HTTP_400_BAD_REQUEST)
         
         client_time_str = request.headers.get('Date')
+        user_agent = request.headers.get('User-Agent', None)
         client_time = parse_date_header(client_time_str)
         
         if not client_time:
@@ -137,7 +205,8 @@ def upload_telemetry(request):
         response_data = []
         telemetry_objects = []
         for telemetry_data in request.data:
-            serializer = TelemetrySerializer(data=telemetry_data)
+            telemetry_data['user-agent'] = user_agent
+            serializer = TelemetrySerializer(data=telemetry_data['user-agent'])
             if serializer.is_valid():
                 validated_data = serializer.validated_data
                 telemetry_object = Telemetry(**validated_data)  # Create the model instance

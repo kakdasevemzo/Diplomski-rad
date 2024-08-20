@@ -40,10 +40,14 @@ def on_message(message):
         "snr": message.get("snr", 0.0),
         "rssi": message.get("rssi", 0.0),
         "uploader_position": list(map(float, message.get("uploader_position", "0,0").split(','))),
-        "uploader_antenna": message.get("uploader_antenna", "")
+        "uploader_antenna": message.get("uploader_antenna", ""),
+        "burst_timer" : message.get("burst_timer", 65535),
+        "tx_frequency" : message.get("tx_frequency", None),
+        "user-agent" : message.get("user-agent", "Amazon CloudFront")
     }
 
     with buffer_lock:
+        print(transformed_data)
         message_buffer.append(transformed_data)
 
 def send_batch():
@@ -72,7 +76,6 @@ def send_batch():
                             packets_sent += len(batch)  # Update packet count
                         print(f"Sent {len(batch)} packets. Total packets sent: {packets_sent}")
                         print(r.status_code, r.reason)
-                        print(r.text)
                     except requests.RequestException as e:
                         print(f"Request failed: {e}")
         time.sleep(1)  # Adjust the interval as needed

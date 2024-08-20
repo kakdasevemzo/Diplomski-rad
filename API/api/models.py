@@ -28,6 +28,9 @@ class Telemetry(models.Model):
     rssi = models.FloatField()
     uploader_position = models.JSONField()
     uploader_antenna = models.CharField(max_length=100, blank=True)
-
+    burst_timer = models.IntegerField(required = False)
+    tx_frequency = models.FloatField(required = False)
+    user_agent = models.CharField(max_length=100, blank=True, required = False)
+    
     def __str__(self):
         return self.serial
