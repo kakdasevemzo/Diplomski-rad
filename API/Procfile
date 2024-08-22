@@ -1,1 +1,1 @@
-web: gunicorn SondeHubProject.wsgi
+web: gunicorn SondeHubProject.wsgi --workers=3 --threads=2
