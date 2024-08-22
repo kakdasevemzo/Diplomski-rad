@@ -88,13 +88,6 @@ DATABASES = {
     }
 }
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'https://localhost:8000',
-    'http://localhost:8000',
-    'https://localhost:3000',
-    '*',
-]
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -138,3 +131,5 @@ django_on_heroku.settings(locals())
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOW_ALL_ORIGINS = True
