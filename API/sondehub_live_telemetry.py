@@ -14,7 +14,8 @@ buffer_lock = threading.Lock()
 def on_message(message):
     global message_buffer
     uploader_position = list(map(float, message.get("uploader_position", "0,0").split(',')))
-    uploader_position.append(float(message.get("uploader_alt", "0")))
+    uploader_alt = message.get("uploader_alt")
+    uploader_position.append(float(uploader_alt) if uploader_alt is not None else 0.0)
     transformed_data = {
         "software_name": message.get("software_name", ""),
         "software_version": message.get("software_version", ""),
@@ -78,7 +79,6 @@ def send_batch():
                             packets_sent += len(batch)  # Update packet count
                         print(f"Sent {len(batch)} packets. Total packets sent: {packets_sent}")
                         print(r.status_code, r.reason)
-                        print(r.text)
                     except requests.RequestException as e:
                         print(f"Request failed: {e}")
         time.sleep(1)  # Adjust the interval as needed

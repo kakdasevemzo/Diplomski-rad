@@ -100,14 +100,16 @@ def upload_telemetry(request):
 
             # Create intervals and check which interval the query datetime falls into
             for unique_datetime in unique_datetimes:
+                print(unique_datetime)
                 interval_start = unique_datetime - timedelta(microseconds=9000)
                 interval_end = unique_datetime
 
                 # Check if the query datetime falls within this interval
                 if interval_start <= rounded_datetime <= interval_end:
+                    print(interval_start, interval_end)
                     # Filter telemetry_data based on this interval
                     telemetry_data = telemetry_data.filter(datetime=unique_datetime)
-                
+
             uploaders = []
 
             for telemetry in telemetry_data:
