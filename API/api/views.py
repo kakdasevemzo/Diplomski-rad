@@ -61,6 +61,15 @@ def parse_date_header(date_str):
         return client_time
     except (ValueError, TypeError):
         return None
+    
+def round_to_nearest_second(dt):
+    # Calculate the number of seconds to add or subtract
+    delta = timedelta(microseconds=dt.microsecond)
+    if delta >= timedelta(microseconds=500000):  # 0.5 seconds
+        return dt + timedelta(seconds=1) - timedelta(microseconds=dt.microsecond)
+    else:
+        return dt - timedelta(microseconds=dt.microsecond)
+
 
 @api_view(['GET', 'PUT'])
 def upload_telemetry(request):
@@ -88,24 +97,14 @@ def upload_telemetry(request):
             original_datetime = datetime_obj  # Assuming datetime_obj is your input datetime
             original_datetime = original_datetime.replace(tzinfo=ZoneInfo('UTC'))
             print(f'ORIGINAL DATETIME: {original_datetime}')
+
+            rounded_date = round_to_nearest_second(original_datetime)
+            print(f'ROUNDED DATETIME: {original_datetime}')
             # Step 2: Define the time range (2 seconds before and after)
-            start_datetime = original_datetime - timedelta(seconds=2, microseconds=0)
-            end_datetime = original_datetime + timedelta(seconds=2, microseconds=0)
+            start_datetime = rounded_date - timedelta(microseconds=500000)
+            end_datetime = rounded_date + timedelta(microseconds=500000)
             print(f"This is start_datetime and end_datetime: {start_datetime}, {end_datetime}")
             telemetry_data = Telemetry.objects.filter(serial=serial, datetime__range=(start_datetime, end_datetime))
-            
-            # Extract unique datetime values from telemetry_data
-            unique_datetimes = telemetry_data.values_list('datetime', flat=True).distinct()
-            print(f"This are unique_datetimes {unique_datetimes}")
-            # Create intervals and check which interval the query datetime falls into
-            for unique_datetime in unique_datetimes:
-                interval_start = unique_datetime - timedelta(microseconds=900000)
-                interval_end = unique_datetime
-                print(f"This are interval_start, interval_end {interval_start}, {interval_end}")
-                # Check if the query datetime falls within this interval
-                if interval_start <= original_datetime <= interval_end:
-                    # Filter telemetry_data based on this interval
-                    telemetry_data = telemetry_data.filter(datetime=unique_datetime)
 
             uploaders = []
 
