@@ -54,6 +54,7 @@ def initialize_mqtt_client():
 
 def publish_mqtt_message(topic, message):
     # Publish the message asynchronously
+    print(f'publishing to topic: {topic}')
     result = client.publish(topic, message)
     # Optionally, handle publish results or errors here
     if result.rc != mqtt.MQTT_ERR_SUCCESS:
