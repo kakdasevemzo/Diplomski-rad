@@ -94,8 +94,8 @@ def upload_telemetry(request):
             rounded_datetime = original_datetime.replace(microsecond=rounded_milliseconds * 1000)
 
             # Step 2: Define the time range (2 seconds before and after)
-            start_datetime = rounded_datetime - timedelta(seconds=2)
-            end_datetime = rounded_datetime + timedelta(seconds=2)
+            start_datetime = original_datetime - timedelta(seconds=2, microseconds=0)
+            end_datetime = original_datetime + timedelta(seconds=2, microseconds=0)
             print(f"This is start_datetime and end_datetime: {start_datetime}, {end_datetime}")
             telemetry_data = Telemetry.objects.filter(serial=serial, datetime__range=(start_datetime, end_datetime))
             
