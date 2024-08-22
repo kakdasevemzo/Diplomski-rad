@@ -6,7 +6,7 @@ from .serializers import TelemetrySerializer
 from django.utils.dateparse import parse_datetime
 from .models import Telemetry
 from django.http import JsonResponse
-from django.utils.timezone import make_aware, utc
+from zoneinfo import ZoneInfo
 
 from datetime import timedelta, datetime, timezone
 
@@ -86,7 +86,7 @@ def upload_telemetry(request):
             
             # Fetch the telemetry data for the given serial and datetime
             original_datetime = datetime_obj  # Assuming datetime_obj is your input datetime
-            original_datetime = make_aware(original_datetime, timezone=utc)
+            original_datetime = original_datetime.replace(tzinfo=ZoneInfo('UTC'))
             print(f'ORIGINAL DATETIME: {original_datetime}')
             # Step 2: Define the time range (2 seconds before and after)
             start_datetime = original_datetime - timedelta(seconds=2, microseconds=0)
