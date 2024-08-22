@@ -87,11 +87,6 @@ def upload_telemetry(request):
             
             # Fetch the telemetry data for the given serial and datetime
             original_datetime = datetime_obj  # Assuming datetime_obj is your input datetime
-            milliseconds = original_datetime.microsecond // 1000  # Get milliseconds part
-            rounded_milliseconds = round(milliseconds / 1000) * 1000  # Round to nearest value
-            print(f"This is datetime original as processed: {original_datetime}")
-            # Adjust the datetime with the rounded milliseconds
-            rounded_datetime = original_datetime.replace(microsecond=rounded_milliseconds * 1000)
 
             # Step 2: Define the time range (2 seconds before and after)
             start_datetime = original_datetime - timedelta(seconds=2, microseconds=0)
@@ -108,7 +103,7 @@ def upload_telemetry(request):
                 interval_end = unique_datetime
                 print(f"This are interval_start, interval_end {interval_start}, {interval_end}")
                 # Check if the query datetime falls within this interval
-                if interval_start <= rounded_datetime <= interval_end:
+                if interval_start <= original_datetime <= interval_end:
                     # Filter telemetry_data based on this interval
                     telemetry_data = telemetry_data.filter(datetime=unique_datetime)
 
