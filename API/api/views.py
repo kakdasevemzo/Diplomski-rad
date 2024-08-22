@@ -6,6 +6,7 @@ from .serializers import TelemetrySerializer
 from django.utils.dateparse import parse_datetime
 from .models import Telemetry
 from django.http import JsonResponse
+import logging
 
 from datetime import timedelta, datetime, timezone
 
@@ -68,6 +69,7 @@ def upload_telemetry(request):
         duration = request.query_params.get('duration', None)
         serial = request.query_params.get('serial', None)
         datetime_str = request.query_params.get('datetime', None)
+        logging.info(f"This is datetime as sent: {datetime_str}")
         server_time = datetime.now(timezone.utc)
         if duration == '0' or duration is None:
             if not serial or not datetime_str:
@@ -85,28 +87,26 @@ def upload_telemetry(request):
             original_datetime = datetime_obj  # Assuming datetime_obj is your input datetime
             milliseconds = original_datetime.microsecond // 1000  # Get milliseconds part
             rounded_milliseconds = round(milliseconds / 1000) * 1000  # Round to nearest value
-
+            logging.info(f"This is datetime original as processed: {original_datetime}")
             # Adjust the datetime with the rounded milliseconds
             rounded_datetime = original_datetime.replace(microsecond=rounded_milliseconds * 1000)
 
             # Step 2: Define the time range (2 seconds before and after)
             start_datetime = rounded_datetime - timedelta(seconds=2)
             end_datetime = rounded_datetime + timedelta(seconds=2)
-            
+            logging.info(f"This is start_datetime and end_datetime: {start_datetime}, {end_datetime}")
             telemetry_data = Telemetry.objects.filter(serial=serial, datetime__range=(start_datetime, end_datetime))
             
             # Extract unique datetime values from telemetry_data
             unique_datetimes = telemetry_data.values_list('datetime', flat=True).distinct()
-
+            logging.info(f"This are unique_datetimes {unique_datetimes}")
             # Create intervals and check which interval the query datetime falls into
             for unique_datetime in unique_datetimes:
-                print(unique_datetime)
                 interval_start = unique_datetime - timedelta(microseconds=9000)
                 interval_end = unique_datetime
-
+                logging.info(f"This are interval_start, interval_end {interval_start}, {interval_end}")
                 # Check if the query datetime falls within this interval
                 if interval_start <= rounded_datetime <= interval_end:
-                    print(interval_start, interval_end)
                     # Filter telemetry_data based on this interval
                     telemetry_data = telemetry_data.filter(datetime=unique_datetime)
 
