@@ -51,7 +51,6 @@ def on_message(message):
     }
 
     with buffer_lock:
-        print(transformed_data.get('datetime'), transformed_data.get('serial'))
         message_buffer.append(transformed_data)
 
 def send_batch():
