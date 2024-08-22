@@ -89,24 +89,24 @@ def upload_telemetry(request):
             original_datetime = datetime_obj  # Assuming datetime_obj is your input datetime
             milliseconds = original_datetime.microsecond // 1000  # Get milliseconds part
             rounded_milliseconds = round(milliseconds / 1000) * 1000  # Round to nearest value
-            logging.info(f"This is datetime original as processed: {original_datetime}")
+            print(f"This is datetime original as processed: {original_datetime}")
             # Adjust the datetime with the rounded milliseconds
             rounded_datetime = original_datetime.replace(microsecond=rounded_milliseconds * 1000)
 
             # Step 2: Define the time range (2 seconds before and after)
             start_datetime = rounded_datetime - timedelta(seconds=2)
             end_datetime = rounded_datetime + timedelta(seconds=2)
-            logging.info(f"This is start_datetime and end_datetime: {start_datetime}, {end_datetime}")
+            print(f"This is start_datetime and end_datetime: {start_datetime}, {end_datetime}")
             telemetry_data = Telemetry.objects.filter(serial=serial, datetime__range=(start_datetime, end_datetime))
             
             # Extract unique datetime values from telemetry_data
             unique_datetimes = telemetry_data.values_list('datetime', flat=True).distinct()
-            logging.info(f"This are unique_datetimes {unique_datetimes}")
+            print(f"This are unique_datetimes {unique_datetimes}")
             # Create intervals and check which interval the query datetime falls into
             for unique_datetime in unique_datetimes:
                 interval_start = unique_datetime - timedelta(microseconds=9000)
                 interval_end = unique_datetime
-                logging.info(f"This are interval_start, interval_end {interval_start}, {interval_end}")
+                print(f"This are interval_start, interval_end {interval_start}, {interval_end}")
                 # Check if the query datetime falls within this interval
                 if interval_start <= rounded_datetime <= interval_end:
                     # Filter telemetry_data based on this interval
