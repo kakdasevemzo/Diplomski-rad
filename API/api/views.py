@@ -82,15 +82,32 @@ def upload_telemetry(request):
                 return JsonResponse({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
             
             # Fetch the telemetry data for the given serial and datetime
+            original_datetime = datetime_obj  # Assuming datetime_obj is your input datetime
+            milliseconds = original_datetime.microsecond // 1000  # Get milliseconds part
+            rounded_milliseconds = round(milliseconds / 1000) * 1000  # Round to nearest value
 
-            datetime_base = datetime_obj.replace(microsecond=0)
+            # Adjust the datetime with the rounded milliseconds
+            rounded_datetime = original_datetime.replace(microsecond=rounded_milliseconds * 1000)
 
-            # Create the range for the datetime
-            start_datetime = datetime_base
-            end_datetime = datetime_base + timedelta(seconds=1) - timedelta(microseconds=1)
+            # Step 2: Define the time range (2 seconds before and after)
+            start_datetime = rounded_datetime - timedelta(seconds=2)
+            end_datetime = rounded_datetime + timedelta(seconds=2)
             
             telemetry_data = Telemetry.objects.filter(serial=serial, datetime__range=(start_datetime, end_datetime))
+            
+            # Extract unique datetime values from telemetry_data
+            unique_datetimes = telemetry_data.values_list('datetime', flat=True).distinct()
 
+            # Create intervals and check which interval the query datetime falls into
+            for unique_datetime in unique_datetimes:
+                interval_start = unique_datetime - timedelta(microseconds=9000)
+                interval_end = unique_datetime
+
+                # Check if the query datetime falls within this interval
+                if interval_start <= rounded_datetime <= interval_end:
+                    # Filter telemetry_data based on this interval
+                    telemetry_data = telemetry_data.filter(datetime=unique_datetime)
+                
             uploaders = []
 
             for telemetry in telemetry_data:
