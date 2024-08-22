@@ -178,6 +178,7 @@ def upload_telemetry(request):
                     "error": "No telemetry data found for the specified serial and datetime."
                 }
                 return Response(response, status=status.HTTP_204_NO_CONTENT)
+        
         duration_mapping = {
             '0s': timedelta(seconds=0),
             '15s': timedelta(seconds=15),
@@ -195,14 +196,10 @@ def upload_telemetry(request):
         # Filter telemetry data
         if serial:
             if start_time:
-                telemetry_data = Telemetry.objects.filter(serial=serial, datetime__range=(start_time, end_time))
-            else:
-                telemetry_data = Telemetry.objects.filter(serial=serial, datetime__lte=end_time)
+                telemetry_data = Telemetry.objects.filter(serial=serial, datetime__range=(start_time, server_time))
         else:
             if start_time:
-                telemetry_data = Telemetry.objects.filter(datetime__range=(start_time, end_time))
-            else:
-                telemetry_data = Telemetry.objects.filter(datetime__lte=end_time)
+                telemetry_data = Telemetry.objects.filter(datetime__range=(start_time, server_time))
         
         # Serialize and organize data
         telemetry_dict = {}
