@@ -99,7 +99,7 @@ def upload_telemetry(request):
             print(f"This are unique_datetimes {unique_datetimes}")
             # Create intervals and check which interval the query datetime falls into
             for unique_datetime in unique_datetimes:
-                interval_start = unique_datetime - timedelta(microseconds=9000)
+                interval_start = unique_datetime - timedelta(microseconds=900000)
                 interval_end = unique_datetime
                 print(f"This are interval_start, interval_end {interval_start}, {interval_end}")
                 # Check if the query datetime falls within this interval
