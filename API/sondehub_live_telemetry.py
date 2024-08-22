@@ -65,8 +65,10 @@ def send_batch():
                 
                 if last_message_time_received:
                     # Convert time_received to a datetime object
-                    last_message_datetime = datetime.strptime(last_message_time_received, "%Y-%m-%dT%H:%M:%S.%fZ")
-                    
+                    try:
+                        last_message_datetime = datetime.strptime(last_message_time_received, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    except ValueError:
+                        last_message_datetime = datetime.strptime(last_message_time_received, '%Y-%m-%dT%H:%M:%SZ')
                     # Format the datetime as per RFC 7231 format
                     date_header_value = last_message_datetime.strftime(f"%a, %d %b %Y %H:%M:%S GMT")
                     print(date_header_value)
