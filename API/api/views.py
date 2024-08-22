@@ -12,7 +12,7 @@ from datetime import timedelta, datetime, timezone
 
 
 # MQTT broker details
-BROKER = 'broker.emqx.io'
+BROKER = 'broker.hivemq.com'
 PORT = 8084  # Port for WebSocket Secure (WSS)
 WEBSOCKET_PATH = '/mqtt'  # WebSocket path
 
