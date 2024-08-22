@@ -3,8 +3,11 @@ import paho.mqtt.client as mqtt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import TelemetrySerializer
+from django.utils.dateparse import parse_datetime
 from .models import Telemetry
 from django.http import JsonResponse
+import logging
+import sys
 
 from datetime import timedelta, datetime, timezone
 
@@ -254,7 +257,6 @@ def upload_telemetry(request):
         # Bulk create objects in the database
         if telemetry_objects:
             Telemetry.objects.bulk_create(telemetry_objects)
-date_obj = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
         # Publish MQTT messages asynchronously
         for telemetry_data in response_data:
             topic = f"telemetry/{telemetry_data.get('serial')}"
