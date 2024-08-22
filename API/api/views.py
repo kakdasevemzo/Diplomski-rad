@@ -12,9 +12,11 @@ from datetime import timedelta, datetime, timezone
 
 
 # MQTT broker details
-BROKER = 'broker.emqx.io/mqtt'
+BROKER = 'broker.emqx.io'
+WEBSOCKET_PATH = '/mqtt'
 PORT = 8084  # Use 8083 for WebSocket if needed
 client = mqtt.Client(reconnect_on_failure=True, transport="websockets")
+client.ws_set_options(path=WEBSOCKET_PATH)
 # MQTT Callbacks
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
