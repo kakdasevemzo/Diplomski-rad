@@ -13,10 +13,20 @@ from datetime import timedelta, datetime, timezone
 
 # MQTT broker details
 BROKER = 'broker.emqx.io'
-WEBSOCKET_PATH = '/mqtt'
-PORT = 8084  # Use 8083 for WebSocket if needed
-client = mqtt.Client(reconnect_on_failure=True, transport="websockets")
+PORT = 8084  # Port for WebSocket Secure (WSS)
+WEBSOCKET_PATH = '/mqtt'  # WebSocket path
+
+# Generate a client ID similar to the JavaScript frontend
+import random
+clientID = "SondeHub-Tracker-" + str(random.randint(0, 10000000000))
+
+# Create an MQTT client instance with WebSocket transport
+client = mqtt.Client(client_id=clientID, transport="websockets")
+
+# Set WebSocket options including path
 client.ws_set_options(path=WEBSOCKET_PATH)
+
+client.tls_set()
 # MQTT Callbacks
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
