@@ -263,7 +263,7 @@ def upload_telemetry(request):
             Telemetry.objects.bulk_create(telemetry_objects)
         # Publish MQTT messages asynchronously
         for telemetry_data in response_data:
-            topic = f"telemetry/{telemetry_data.get('serial')}"
+            topic = f"sondes/{telemetry_data.get('serial')}"
             message = f"{telemetry_data}"
             # Use an asynchronous task queue like Celery for publishing messages
             # async_publish_mqtt_message.delay(topic, message)
