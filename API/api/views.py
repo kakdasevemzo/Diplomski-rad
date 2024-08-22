@@ -7,6 +7,7 @@ from django.utils.dateparse import parse_datetime
 from .models import Telemetry
 from django.http import JsonResponse
 import logging
+import sys
 
 from datetime import timedelta, datetime, timezone
 
@@ -65,11 +66,12 @@ def parse_date_header(date_str):
 @api_view(['GET', 'PUT'])
 def upload_telemetry(request):
     if request.method == 'GET':
+        print(f'Started GET!!!!!!!')
         # Get query parameters
         duration = request.query_params.get('duration', None)
         serial = request.query_params.get('serial', None)
         datetime_str = request.query_params.get('datetime', None)
-        logging.info(f"This is datetime as sent: {datetime_str}")
+        print('datetime_str: ', datetime_str)
         server_time = datetime.now(timezone.utc)
         if duration == '0' or duration is None:
             if not serial or not datetime_str:
