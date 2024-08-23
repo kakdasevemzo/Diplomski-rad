@@ -55,6 +55,7 @@ def initialize_mqtt_client():
 def publish_mqtt_message(topic, message):
     # Publish the message asynchronously
     print(f'publishing to topic: {topic}')
+    print(message)
     result = client.publish(topic, message)
     # Optionally, handle publish results or errors here
     if result.rc != mqtt.MQTT_ERR_SUCCESS:
@@ -240,7 +241,8 @@ def upload_telemetry(request):
         
         # Get the current server time in UTC
         server_time = datetime.now(timezone.utc)
-        
+        print(f'ORIGINAL DATETIME: {original_datetime}')
+
         # Calculate the time offset (difference in seconds)
         time_offset = (server_time - client_time).total_seconds()
         initialize_mqtt_client()

@@ -83,7 +83,7 @@ def send_batch():
                         print(r.status_code, r.reason)
                     except requests.RequestException as e:
                         print(f"Request failed: {e}")
-        time.sleep(1)  # Adjust the interval as needed
+        time.sleep(0.5)  # Adjust the interval as needed
 
 if __name__ == "__main__":
     # Start the batch sending thread
@@ -102,5 +102,5 @@ if __name__ == "__main__":
     test = sondehub.Stream(on_message=on_message, sondes=[sonde] if sonde else ["#"])
 
     while True:
-        time.sleep(1)  # Replace with your main loop logic
+        continue  # Replace with your main loop logic
 
